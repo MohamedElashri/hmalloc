@@ -23,6 +23,7 @@ typedef struct Slab {
     uint32_t block_size;
     uint32_t free_count;
     uint32_t total_blocks;
+    uint32_t arena_id;
     struct Slab *next;
     struct Slab *prev;
     void *free_list;
@@ -35,9 +36,12 @@ typedef struct {
 
 typedef struct {
     void *free_list[NUM_SIZE_CLASSES];
+    uint16_t counts[NUM_SIZE_CLASSES];
     bool initialized;
     int arena_id;
 } Tcache;
+
+#define TCACHE_MAX_BLOCKS 256
 
 typedef struct {
     pthread_mutex_t lock;

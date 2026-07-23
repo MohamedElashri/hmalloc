@@ -171,6 +171,7 @@ static Slab *allocate_slab(int c) {
     s->magic = SLAB_MAGIC;
     s->size_class = c;
     s->block_size = block_size;
+    s->arena_id = tcache.arena_id;
     
     size_t header_size = sizeof(Slab);
     size_t usable_space = SLAB_ALIGNMENT - header_size;
@@ -233,6 +234,52 @@ static void refill_tcache(int c) {
     *(void **)list_curr = obfuscate_ptr(NULL);
     
     tcache.free_list[c] = curr;
+    tcache.counts[c] += blocks_to_move;
+}
+
+static void flush_tcache(int c) {
+    int blocks_to_flush = TCACHE_MAX_BLOCKS / 2;
+    void *ptr = tcache.free_list[c];
+    int current_locked_arena = -1;
+    
+    for (int i = 0; i < blocks_to_flush && ptr; i++) {
+        void *next = deobfuscate_ptr(*(void **)ptr);
+        Slab *s = (Slab *)((uintptr_t)ptr & SLAB_MASK);
+        
+        int a_id = s->arena_id;
+        if (a_id != current_locked_arena) {
+            if (current_locked_arena != -1) {
+                pthread_mutex_unlock(&arenas[current_locked_arena].lock);
+            }
+            pthread_mutex_lock(&arenas[a_id].lock);
+            current_locked_arena = a_id;
+        }
+        
+        *(void **)ptr = s->free_list;
+        s->free_list = ptr;
+        s->free_count++;
+        
+        if (s->free_count == s->total_blocks) {
+            if (s->prev) s->prev->next = s->next;
+            else arenas[a_id].partial_slabs[c] = s->next;
+            if (s->next) s->next->prev = s->prev;
+            arenas[a_id].active_slabs--;
+            munmap(s, SLAB_ALIGNMENT);
+        } else if (s->free_count == 1) {
+            s->next = arenas[a_id].partial_slabs[c];
+            s->prev = NULL;
+            if (s->next) s->next->prev = s;
+            arenas[a_id].partial_slabs[c] = s;
+        }
+        ptr = next;
+    }
+    
+    if (current_locked_arena != -1) {
+        pthread_mutex_unlock(&arenas[current_locked_arena].lock);
+    }
+    
+    tcache.free_list[c] = ptr;
+    tcache.counts[c] -= blocks_to_flush;
 }
 
 void *hmalloc(size_t size) {
@@ -248,6 +295,7 @@ void *hmalloc(size_t size) {
         
         void *ptr = tcache.free_list[c];
         tcache.free_list[c] = deobfuscate_ptr(*(void **)ptr);
+        tcache.counts[c]--;
         return ptr;
     } else {
         size_t total_size = size + sizeof(LargeBlock);
@@ -293,8 +341,12 @@ void hfree(void *ptr) {
         if (__builtin_expect(tcache.initialized, 1)) {
             *(void **)ptr = obfuscate_ptr(tcache.free_list[c]);
             tcache.free_list[c] = ptr;
+            tcache.counts[c]++;
+            if (__builtin_expect(tcache.counts[c] >= TCACHE_MAX_BLOCKS, 0)) {
+                flush_tcache(c);
+            }
         } else {
-            int a_id = ((uintptr_t)pthread_self() >> 12) % NUM_ARENAS;
+            int a_id = s->arena_id;
             pthread_mutex_lock(&arenas[a_id].lock);
             *(void **)ptr = s->free_list;
             s->free_list = ptr;
