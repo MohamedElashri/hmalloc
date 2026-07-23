@@ -27,13 +27,15 @@ examples: $(SHARED_TARGET) $(STATIC_TARGET)
 	$(CC) $(CFLAGS) -o examples/static_03_tcache_scale examples/static_03_tcache_scale.c libhmalloc.a
 	$(CC) $(CFLAGS) -o examples/static_04_alignment examples/static_04_alignment.c libhmalloc.a
 	$(CC) $(CFLAGS) -o examples/static_05_web_server examples/static_05_web_server.c libhmalloc.a
-
+	$(CC) $(CFLAGS) -o examples/static_06_producer_consumer examples/static_06_producer_consumer.c libhmalloc.a
+	$(CC) $(CFLAGS) -o examples/static_07_burst_fragmentation examples/static_07_burst_fragmentation.c libhmalloc.a
+	$(CC) $(CFLAGS) -o examples/static_08_heavy_concurrency examples/static_08_heavy_concurrency.c libhmalloc.a
 clean:
 	rm -f $(OBJS) $(SHARED_TARGET) $(STATIC_TARGET)
 	rm -f tests/test_basic tests/test_threads
 	rm -f examples/shared_01_benchmark examples/shared_02_fragmentation examples/shared_03_producer_consumer examples/shared_04_large_mmap examples/shared_05_matrix_mul
 	rm -f examples/static_01_benchmark examples/static_02_boundaries examples/static_03_tcache_scale examples/static_04_alignment examples/static_05_web_server
-
+	rm -f examples/static_06_producer_consumer examples/static_07_burst_fragmentation examples/static_08_heavy_concurrency
 test: all examples
 	$(CC) $(CFLAGS) -o tests/test_basic tests/test_basic.c -L. -lhmalloc -Wl,-rpath,.
 	$(CC) $(CFLAGS) -o tests/test_threads tests/test_threads.c -L. -lhmalloc -Wl,-rpath,.
