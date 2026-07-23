@@ -1,5 +1,6 @@
 CC = gcc
-CFLAGS = -Wall -Wextra -O3 -fPIC -pthread -Iinclude
+SECURITY_FLAGS ?= 
+CFLAGS = -Wall -Wextra -O3 -fPIC -pthread -Iinclude $(SECURITY_FLAGS)
 LDFLAGS = -shared -pthread
 SHARED_TARGET = libhmalloc.so
 STATIC_TARGET = libhmalloc.a
