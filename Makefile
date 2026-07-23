@@ -16,22 +16,22 @@ $(STATIC_TARGET): $(OBJS)
 	ar rcs $@ $^
 
 examples: $(SHARED_TARGET) $(STATIC_TARGET)
-	$(CC) $(CFLAGS) -o examples/shared_01_basic examples/shared_01_basic.c
-	$(CC) $(CFLAGS) -o examples/shared_02_array examples/shared_02_array.c
-	$(CC) $(CFLAGS) -o examples/shared_03_struct examples/shared_03_struct.c
-	$(CC) $(CFLAGS) -o examples/shared_04_calloc examples/shared_04_calloc.c
-	$(CC) $(CFLAGS) -o examples/shared_05_threads examples/shared_05_threads.c
-	$(CC) $(CFLAGS) -o examples/static_01_basic examples/static_01_basic.c libhmalloc.a
-	$(CC) $(CFLAGS) -o examples/static_02_array examples/static_02_array.c libhmalloc.a
-	$(CC) $(CFLAGS) -o examples/static_03_struct examples/static_03_struct.c libhmalloc.a
-	$(CC) $(CFLAGS) -o examples/static_04_large examples/static_04_large.c libhmalloc.a
-	$(CC) $(CFLAGS) -o examples/static_05_threads examples/static_05_threads.c libhmalloc.a
+	$(CC) $(CFLAGS) -o examples/shared_01_benchmark examples/shared_01_benchmark.c
+	$(CC) $(CFLAGS) -o examples/shared_02_fragmentation examples/shared_02_fragmentation.c
+	$(CC) $(CFLAGS) -o examples/shared_03_producer_consumer examples/shared_03_producer_consumer.c
+	$(CC) $(CFLAGS) -o examples/shared_04_large_mmap examples/shared_04_large_mmap.c
+	$(CC) $(CFLAGS) -o examples/shared_05_matrix_mul examples/shared_05_matrix_mul.c
+	$(CC) $(CFLAGS) -o examples/static_01_benchmark examples/static_01_benchmark.c libhmalloc.a
+	$(CC) $(CFLAGS) -o examples/static_02_boundaries examples/static_02_boundaries.c libhmalloc.a
+	$(CC) $(CFLAGS) -o examples/static_03_tcache_scale examples/static_03_tcache_scale.c libhmalloc.a
+	$(CC) $(CFLAGS) -o examples/static_04_alignment examples/static_04_alignment.c libhmalloc.a
+	$(CC) $(CFLAGS) -o examples/static_05_web_server examples/static_05_web_server.c libhmalloc.a
 
 clean:
 	rm -f $(OBJS) $(SHARED_TARGET) $(STATIC_TARGET)
 	rm -f tests/test_basic tests/test_threads
-	rm -f examples/shared_01_basic examples/shared_02_array examples/shared_03_struct examples/shared_04_calloc examples/shared_05_threads
-	rm -f examples/static_01_basic examples/static_02_array examples/static_03_struct examples/static_04_large examples/static_05_threads
+	rm -f examples/shared_01_benchmark examples/shared_02_fragmentation examples/shared_03_producer_consumer examples/shared_04_large_mmap examples/shared_05_matrix_mul
+	rm -f examples/static_01_benchmark examples/static_02_boundaries examples/static_03_tcache_scale examples/static_04_alignment examples/static_05_web_server
 
 test: all examples
 	$(CC) $(CFLAGS) -o tests/test_basic tests/test_basic.c -L. -lhmalloc -Wl,-rpath,.
