@@ -1,0 +1,12 @@
+*.o
+*.so
+*.a
+
+# Test binaries
+tests/test_basic
+tests/test_threads
+
+# Example binaries
+examples/shared_*
+examples/static_*
+!examples/*.c
